@@ -1,0 +1,28 @@
+<!DOCTYPE html />
+<html>
+
+<head>
+    <title>nano WebSocket Test Page</title>
+</head>
+
+<body>
+    <script src="./protocol.js"></script>
+    <script src="./nano-websocket-client.js"></script>
+    <script type="text/javascript">
+
+        var nano = window.nano
+
+        nano.init({ host: "127.0.0.1", port: 1234, path: "/ws", log: true }, function () {
+            nano.request("chat.login", { "name": "chrislonng", "age": 10000 }, function (data) {
+                console.log(data);
+            });
+
+            nano.on("notify", function (data) {
+                console.log(data);
+            });
+        });
+
+    </script>
+</body>
+
+</html>

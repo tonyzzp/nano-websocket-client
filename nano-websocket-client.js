@@ -1,4 +1,12 @@
 (function () {
+
+  let Protocol
+  if (typeof window == "undefined") {
+    Protocol = require("./protocol")
+  } else {
+    Protocol = window.Protocol
+  }
+
   function Emitter(obj) {
     if (obj) return mixin(obj);
   }
@@ -152,13 +160,15 @@
   var JS_WS_CLIENT_TYPE = 'js-websocket';
   var JS_WS_CLIENT_VERSION = '0.0.1';
 
-  var Protocol = window.Protocol;
   var decodeIO_encoder = null;
   var decodeIO_decoder = null;
   var Package = Protocol.Package;
   var Message = Protocol.Message;
   var EventEmitter = Emitter;
-  var rsa = window.rsa;
+  var rsa
+  if (typeof window == "object") {
+    rsa = window.rsa
+  }
 
   if (typeof (window) != "undefined" && typeof (sys) != 'undefined' && sys.localStorage) {
     window.localStorage = sys.localStorage;
@@ -176,9 +186,12 @@
     };
   }
 
-  var root = window;
   var nano = Object.create(EventEmitter.prototype); // object extend from object
-  root.nano = nano;
+  if (typeof window == "object") {
+    window.nano = nano
+  } else {
+    module.exports = nano
+  }
   var socket = null;
   var reqId = 0;
   var callbacks = {};
@@ -239,7 +252,7 @@
     }
 
     handshakeBuffer.user = params.user;
-    if (params.encrypt) {
+    if (params.encrypt && rsa) {
       useCrypto = true;
       rsa.generate(1024, "10001");
       var data = {
@@ -325,6 +338,7 @@
         reconnectionDelay *= 2;
       }
     };
+    let WebSocket = params.webSocket || window.WebSocket
     socket = new WebSocket(url);
     socket.binaryType = 'arraybuffer';
     socket.onopen = onopen;
@@ -383,7 +397,7 @@
   };
 
   var sendMessage = function (reqId, route, msg) {
-    if (useCrypto) {
+    if (useCrypto && rsa) {
       msg = JSON.stringify(msg);
       var sig = rsa.signString(msg, "sha256");
       msg = JSON.parse(msg);
@@ -532,8 +546,6 @@
     } else {
       return JSON.parse(Protocol.strdecode(msg.body));
     }
-
-    return msg;
   };
 
   var handshakeInit = function (data) {
@@ -568,7 +580,5 @@
         abbrs[dict[route]] = route;
       }
     }
-
-    window.nano = nano;
   }
 })();
